@@ -1,6 +1,6 @@
 var COOKIEJAR_API_URL = 'https://evmecookie.appspot.com/api';
 
-var user;
+var user, status1;
 
 function $(id) {
     return document.getElementById(id);
@@ -55,15 +55,18 @@ function ajax(method, url, data, success, failure) {
 // called with with the anchor element as this
 function deleteCookie()
 {
-    $('status').innerHTML = 'Deleting cookie...';
+    status1.show('Deleting cookie...');
     var cookieId = this.getAttribute('data-cookie-id');
     ajax(
         'DELETE',
         COOKIEJAR_API_URL + '/cookie/' + cookieId,
         null,
-        refreshCookies,
         function() {
-            $('status').innerHTML = 'Unable to delete cookie';
+            status1.hide();
+            refreshCookies();
+        },
+        function() {
+            status1.error('Unable to delete cookie');
         }
     );
 }
@@ -73,7 +76,7 @@ function updateCookie()
 {
     // TODO: Add the ability to alter the description
     //       The backend supports it...
-    $('status').innerHTML = 'Updating cookie...';
+    status1.show('Updating cookie...');
     var cookieId = this.getAttribute('data-cookie-id');
 
     // 10bis save their cookies both on 10bis.co.il and www.10bis.co.il
@@ -86,10 +89,10 @@ function updateCookie()
                 content: JSON.stringify(cookies)
             },
             function(){
-                $('status').innerHTML = 'Cookie updated';
+                status1.success('Cookie updated');
             },
             function(){
-                $('status').innerHTML = 'Unable to update cookie';
+                status1.error('Unable to update cookie');
             }
         );
     });
@@ -98,7 +101,7 @@ function updateCookie()
 // called with with the anchor element as this
 function useCookie()
 {
-    $('status').innerHTML = 'Loading cookie ...';
+    status1.show('Loading cookie ...', status1.STAY);
     var cookieId = this.getAttribute('data-cookie-id');
     ajax(
         'GET',
@@ -121,20 +124,23 @@ function useCookie()
                 console.log(item);
                 chrome.cookies.set(item);
             }
-            $('status').innerHTML = 'Cookie ' + cookie.description + ' loaded';
+            status1.success('Cookie ' + cookie.description + ' loaded');
         },
         function(){
-            $('status').innerHTML = 'An error occured while trying to fetch cookie :(';
+            status1.error('An error occured while trying to fetch cookie :(');
         }
     );
 }
 
 function refreshCookies()
 {
-    $('status').innerHTML = 'Updating...';
-    var ul = $('cookies');
-    // remove old list items
-    ul.innerHTML = '';
+    updatingStart();
+
+    var othersUl = $('others');
+    othersUl.innerHTML = '';
+
+    var ownerUl = $('owner');
+    ownerUl.innerHTML = '';
 
     ajax(
         'GET',
@@ -148,50 +154,71 @@ function refreshCookies()
             {
                 cookie = cookies[cookie];
                 li = document.createElement('li');
-                li.appendChild(createElement('span', {class: 'author'}, cookie.author));
-                li.appendChild(document.createTextNode(' - '));
-                li.appendChild(createElement('span', {class: 'description'}, cookie.description));
-                li.appendChild(document.createTextNode(' - '));
-                use = createElement('a', {href: '#', 'data-cookie-id': cookie.id}, 'use');
-                use.addEventListener('click', useCookie);
-                li.appendChild(use);
+                li.appendChild(createElement('span', {'class': 'description'}, cookie.description));
+                li.appendChild(createElement('span', {'class': 'author'}, cookie.author));
 
-                // if we are the cookie owner
-                if (cookie.author == user)
-                {
+                // if we are not the cookie owner
+                if (cookie.author != user) {
+                    use = createElement('a', {
+                        'href': '#',
+                        'data-cookie-id': cookie.id,
+                        'class': 'btn btn-success btn-mini'
+                    }, 'הצטרף');
+                    use.addEventListener('click', useCookie);
+                    li.appendChild(use);
+
+                    othersUl.appendChild(li);
+                } else {
                     // delete, update links
 
-                    li.appendChild(document.createTextNode(' - '));
-                    del = createElement('a', {href: '#', 'data-cookie-id': cookie.id}, 'delete');
+                    del = createElement('a', {
+                        'href': '#',
+                        'data-cookie-id': cookie.id,
+                        'class': 'btn btn-mini btn-inverse'
+                    }, 'מחק');
                     del.addEventListener('click', deleteCookie);
                     li.appendChild(del);
 
-                    li.appendChild(document.createTextNode(' - '));
-                    update = createElement('a', {href: '#', 'data-cookie-id': cookie.id}, 'update');
+                    update = createElement('a', {
+                        'href': '#',
+                        'data-cookie-id': cookie.id,
+                        'class': 'btn btn-mini btn-inverse'
+                    },  'עדכן');
                     update.addEventListener('click', updateCookie);
                     li.appendChild(update);
+
+                    ownerUl.appendChild(li);
+
+                    document.body.classList.add("has-owner")
                 }
-                ul.appendChild(li);
             }
 
+            
             if (cookies.length == 0)
             {
-                $('status').innerHTML = 'No cookies :(';
+                status1.error('No cookies :(');
             }
-            else
-            {
-                $('status').innerHTML = '';
-            }
+            updatingStop();
         },
         function(){
-            $('status').innerHTML = 'Unable to refresh list';
+            updatingStop();
         }
     );
 }
 
+function updatingStart() {
+    document.body.classList.add('updating');
+    document.body.classList.remove("has-owner");
+}
+
+function updatingStop() {
+    document.body.classList.remove('updating');
+}
+
 function createCookie()
 {
-    $('status').innerHTML = 'Creating cookie';
+
+    status1.show('Creating cookie', status1.STAY);
     $('create').disabled = true;
     var description = $('description').value;
 
@@ -208,16 +235,21 @@ function createCookie()
             function(){
                 $('description').value = '';
                 $('create').disabled = false;
+                status1.hide();
                 refreshCookies();
             },
             function(){
-                $('status').innerHTML = 'Failed creating cookie :(';
+                status1.error('Failed creating cookie :(');
             }
         );
     });
 }
 
 document.addEventListener('DOMContentLoaded', function(){
+    status1 = new Status({
+        'element': $('status')
+    });
+    updatingStart();
     ajax(
         'GET',
         COOKIEJAR_API_URL + '/whoami',
@@ -226,7 +258,7 @@ document.addEventListener('DOMContentLoaded', function(){
             user = this.responseText;
             if (user == '')
             {
-                $('status').innerHTML = 'Not logged in';
+                status1.error('Not logged in');
                 window.open(COOKIEJAR_API_URL + '/cookie');
             }
             else
@@ -235,9 +267,54 @@ document.addEventListener('DOMContentLoaded', function(){
                 $('refresh').addEventListener('click', refreshCookies);
                 refreshCookies();
             }
+            updatingStop();
         },
         function(){
-            $('status').innerHTML = 'Unable to query who you are :(';
+            status1.error('Unable to query who you are :(');
         }
     );
 });
+
+function Status(cfg) {
+    var self = this,
+        el = cfg.element,
+        duration = cfg.duration || 4000,
+        isShowing = false,
+        hideTimeout;
+
+    this.show = function(msg, stay, type) {
+        show(function() {
+            isShowing = true;
+            el.innerHTML = msg;
+            el.className = 'show '+(type || '');
+            hideTimeout = setTimeout(hide, duration);    
+        });
+    };
+
+    this.success = function(msg, stay) {
+        self.show(msg, stay, 'success');
+    };
+
+    this.error = function(msg, stay) {
+        self.show(msg, stay, 'error');
+    };
+
+    this.hide = function() {
+        hide()
+    };
+
+    function hide() {
+        hideTimeout && clearTimeout(hideTimeout);
+        isShowing = false;
+        el.className = '';
+    }
+
+    function show(cb) {
+        if (isShowing) {
+            hide();
+            setTimeout(cb, 500)
+        } else {
+            cb();
+        }
+    }
+}
