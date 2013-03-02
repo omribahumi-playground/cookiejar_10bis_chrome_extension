@@ -1,0 +1,91 @@
+* {
+	margin: 0;
+	padding: 0;
+}
+body {
+    min-width: 380px;
+    overflow-x: hidden;
+    background: #20201d url(../img/bg.gif) 0 -1px repeat-x;
+    color: white;
+    padding: 10px;
+    direction: rtl;
+    font-family: arial;
+}
+body.updating {
+	content: "טוען...";
+}
+body.updating *{
+	display: none;
+}
+ul {
+	margin: 0;
+}
+li {
+	list-style: none;
+	margin-bottom: 4px;
+}
+li a {
+	margin-right: 4px;
+	cursor: pointer;
+}
+.description {
+	font-weight: bold;
+	float: right;
+	margin-left: 5px;
+}
+.author::before {
+	content: ' (';
+}
+.author::after {
+	content: ') ';
+}
+#others {
+	border-bottom: 1px solid #555;
+	padding-bottom: 7px;
+	margin-bottom: 7px;
+}
+#refresh {
+	position: absolute;
+	left: 10px;
+	top: 10px;
+	text-indent: -100px;
+	overflow: hidden;
+	text-decoration: none;
+	border: 0;
+}
+form {
+	margin: 7px 0 0;
+}
+form input[type=text] {
+	padding: 2px;
+	margin: 0;
+}
+.has-owner form {
+	display: none;
+}
+#status {
+	position: absolute;
+	top: -30px;
+	-webkit-transition: all 0.2s linear;
+	background: #ccc;
+	color: #333;
+	padding: 2px 5px;
+	left: 28px;
+	border-bottom-right-radius: 2px;
+	border-bottom-left-radius: 2px;
+	font-size: 11px;
+	direction: ltr;
+	opacity: 0;
+}
+#status.show {
+	top: 0;
+	opacity: 1;
+}
+#status.success {
+	background: green;
+	color: white;
+}
+#status.error {
+	background: red;
+	color: white;
+}
