@@ -227,7 +227,7 @@ document.addEventListener('DOMContentLoaded', function(){
             if (user == '')
             {
                 $('status').innerHTML = 'Not logged in';
-                window.open(COOKIEJAR_API_URL + '/whoami');
+                window.open(COOKIEJAR_API_URL + '/cookie');
             }
             else
             {
