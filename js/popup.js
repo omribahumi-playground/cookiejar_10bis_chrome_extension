@@ -168,6 +168,8 @@ function refreshCookies()
                     li.appendChild(use);
 
                     othersUl.appendChild(li);
+
+                    document.body.classList.add("has-others");
                 } else {
                     // delete, update links
 
@@ -189,7 +191,7 @@ function refreshCookies()
 
                     ownerUl.appendChild(li);
 
-                    document.body.classList.add("has-owner")
+                    document.body.classList.add("has-owner");
                 }
             }
 
@@ -209,6 +211,7 @@ function refreshCookies()
 function updatingStart() {
     document.body.classList.add('updating');
     document.body.classList.remove("has-owner");
+    document.body.classList.remove("has-others");
 }
 
 function updatingStop() {
